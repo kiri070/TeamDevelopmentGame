@@ -9,9 +9,8 @@ __以下のイベント等に展示しました__
 - 東京ゲームショウ2025
 - ゲームパビリオンjp
 
-## プレイ動画
-- GIF  
-準備中...
+## サンプル画像
+![サンプル画像](https://github.com/kiri070/TeamDevelopmentGame/blob/main/Images/sampleImage01.png)
 
 - ゲーム画面や機能の詳細はこちら
 
