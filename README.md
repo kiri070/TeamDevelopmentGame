@@ -49,6 +49,7 @@ __以下のイベント等に展示しました__
 - 実行ファイルの場合(windowsのみ)
 1. GoogleDriveからzipファイルをダウンロード
 2. 解凍してteam.exeを実行
+GoogleDriveリンク→ https://drive.google.com/file/d/1L-F4DIjL6IiotbHx8Aw4xfWYDA22db4r/view?usp=sharing
 
 ## 開発メンバー
 - 辻本 伊吹(メインプログラム)
