@@ -16,6 +16,8 @@ __以下のイベント等に展示しました__
 
 プレイ映像 youtubeリンク→ 準備中...
 
+ゲーム紹介Webサイト→ https://oecu-games.itch.io/burnout
+
 ## 使用技術
 - Unity(ver.2022.3.22f1)
 - C#
