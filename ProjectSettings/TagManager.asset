@@ -1,0 +1,70 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!78 &1
+TagManager:
+  serializedVersion: 2
+  tags:
+  - Floor
+  - GameOverWall
+  - Goal
+  - Player1
+  - Player2
+  - FireArea
+  - Wall
+  - FrozenArea
+  - DeathArea
+  - Enemy
+  - Majic
+  - Bomb
+  - CheckPoint
+  - Bullet
+  - BringJudge
+  - Bound
+  - CannonBall
+  - Treasure
+  - UnderOverGimic
+  - GameOverWall_Gimic
+  - reverse_Gimic
+  - GimicBlock_Bomb
+  - CheckPoint_TopBottom
+  - ZoomOutPos
+  - HighCameraArea
+  - Blink
+  - ZoomOutObj
+  layers:
+  - Default
+  - TransparentFX
+  - Ignore Raycast
+  - Player
+  - Water
+  - UI
+  - Broken
+  - Collidable
+  - BringObj
+  - Wall
+  - Stair
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  m_SortingLayers:
+  - name: Default
+    uniqueID: 0
+    locked: 0
