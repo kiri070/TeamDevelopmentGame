@@ -52,7 +52,7 @@ __以下のイベント等に展示しました__
 [ダウンロードリンク](https://drive.google.com/file/d/1L-F4DIjL6IiotbHx8Aw4xfWYDA22db4r/view?usp=sharing)
 
 
-- 操作方法
+- 操作方法  
 __キーボードの場合__  
 ・赤のキャラクター:移動(W,A,S,D), 宝箱を持つ(F長押し)  
 ・青のキャラクター:移動(I,J,K,L), 宝箱を持つ(H長押し)  
