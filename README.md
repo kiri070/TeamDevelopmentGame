@@ -46,15 +46,15 @@ __以下のイベント等に展示しました__
 1. Unity Hubでこのプロジェクトを開く
 2. Assets/Scenes/Title を開いて再生ボタンを押す
 
-- 実行ファイルの場合(windowsのみ)
-1. GoogleDriveからzipファイルをダウンロード
-2. 解凍してteam.exeを実行
+- 実行ファイルの場合(windowsのみ)  
+1. GoogleDriveからzipファイルをダウンロード  
+2. 解凍してteam.exeを実行  
 [ダウンロードリンク](https://drive.google.com/file/d/1L-F4DIjL6IiotbHx8Aw4xfWYDA22db4r/view?usp=sharing)
 
 
-キーボードでの操作方法
-・赤のキャラクター:移動(W,A,S,D), 宝箱を持つ(F長押し)
-・青のキャラクター:移動(I,J,K,L), 宝箱を持つ(H長押し)
+キーボードでの操作方法  
+・赤のキャラクター:移動(W,A,S,D), 宝箱を持つ(F長押し)  
+・青のキャラクター:移動(I,J,K,L), 宝箱を持つ(H長押し)  
 
 [コントローラーの場合はこちら](https://oecu-games.itch.io/burnout)
 
