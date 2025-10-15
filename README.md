@@ -12,9 +12,6 @@ __以下のイベント等に展示しました__
 ## サンプル画像
 ![サンプル画像](https://github.com/kiri070/TeamDevelopmentGame/blob/main/Images/sampleImage01.png)
 
-- ゲーム画面や機能の詳細はこちら
-
-プレイ映像 youtubeリンク→ 準備中...
 
 [ゲーム紹介ウェブサイト](https://oecu-games.itch.io/burnout)
 
