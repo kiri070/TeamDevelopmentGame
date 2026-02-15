@@ -25,6 +25,7 @@ public class Pad_UICnt : MonoBehaviour
 
     bool isControllerInputActive = false; //コントローラーが使われているか
     SettingManager settingManager;
+
     private void Start()
     {
         //最初にフォーカスするUIを設定
@@ -83,6 +84,7 @@ public class Pad_UICnt : MonoBehaviour
     void Change_FocusButtonScale()
     {
         var selectedObj = EventSystem.current.currentSelectedGameObject; //フォーカスされているオブジェクトを格納
+
         if (selectedObj == previousSelected)
             return; //同じオブジェクトならスキップ
 

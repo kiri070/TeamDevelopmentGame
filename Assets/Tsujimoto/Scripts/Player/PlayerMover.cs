@@ -13,8 +13,11 @@ public class PlayerMover : MonoBehaviour
     GameManager gameManager;
     // 持っているオブジェクトを記録
     [HideInInspector] public Rigidbody heldObject;
+    //仮
+    Vector3 center;
 
-    [Header("物体を持てる範囲")] [SerializeField] Vector3 boxSize = new Vector3(1f, 0.2f, 1f);
+
+    [Header("物体を持てる範囲")] public Vector3 boxSize = new Vector3(1f, 0.2f, 1f);
     [SerializeField] Vector3 offSet = new Vector3(0f, 0f, 0f);
     [Header("物体のレイヤー")] public LayerMask objLayer;
     [HideInInspector]
@@ -42,8 +45,11 @@ public class PlayerMover : MonoBehaviour
     [Header("エフェクト")]
     [Tooltip("敵と衝突")] public GameObject nockBackEffect;
     [Tooltip("ジャンプ")] public GameObject jumpEffect;
-    [Tooltip("氷の床")] public GameObject frozenEffect;
+    [Tooltip("同時運搬中のエフェクト")] public GameObject frozenEffect;
     [Tooltip("トランポリン")] public GameObject tranpolineEffect;
+    //同時運搬中のエフェクト処理関連
+    Queue<GameObject> speedEffectPool = new Queue<GameObject>(); //エフェクトキュー
+    float speedEffectTimer = 0f;
 
     Renderer[] renderers; // 複数のRenderer（子オブジェクト含む）を管理
     List<Material[]> defaultMaterials = new List<Material[]>(); // 各Rendererの初期マテリアルを保存
@@ -114,6 +120,12 @@ public class PlayerMover : MonoBehaviour
         if (move.magnitude > 0.01) moving = true;
         else moving = false;
 
+        //同時運搬中の処理
+        if (playerCnt.isDualCarrying)
+        {
+            SpawnSpeedEffect(); //エフェクト
+        }
+
         // OffScreen();
         // WallChecker();
     }
@@ -121,89 +133,271 @@ public class PlayerMover : MonoBehaviour
     void FixedUpdate()
     {
         BringArea();
+        Check_IsBoxArea();
         if (canMove)
             Move();
     }
+    //同時運搬中のエフェクト関数
+    void SpawnSpeedEffect()
+    {
+        speedEffectTimer += Time.deltaTime;
+
+        if (speedEffectTimer > 0.04f) // 生成間隔
+        {
+            // 足元
+            Vector3 pos = transform.position + Vector3.up * 0.1f;
+            //生成
+            GameObject effect = Instantiate(frozenEffect, pos, Quaternion.identity);
+            speedEffectPool.Enqueue(effect);
+
+            // 30個以上たまれば古いものを消す
+            if (speedEffectPool.Count > 10)
+            {
+                GameObject old = speedEffectPool.Dequeue();
+                Destroy(old);
+            }
+
+            speedEffectTimer = 0f;
+        }
+    }
+
+    //宝箱が範囲内にあるかどうかで持てるかの判断をする関数
+    void Check_IsBoxArea()
+    {
+
+        Physics.OverlapBox(center, boxSize / 2, Quaternion.identity, objLayer);
+        // 物体を検索
+        Collider[] hits = Physics.OverlapBox(center, boxSize / 2, Quaternion.identity, objLayer);
+
+        //プレイヤー1なら
+        if (playerIndex == 1)
+        {
+            if (hits.Length > 0)
+            {
+                playerCnt.player1_isBoxArea = true;
+            }
+            else
+            {
+                playerCnt.player1_isBoxArea = false;
+            }
+        }
+
+        //プレイヤー2なら
+        if (playerIndex == 2)
+        {
+            if (hits.Length > 0)
+            {
+                playerCnt.player2_isBoxArea = true;
+            }
+            else
+            {
+                playerCnt.player2_isBoxArea = false;
+            }
+        }
+
+    }
+
+    //(旧バージョン)
+    //物体を持てる範囲
+    // void BringArea()
+    // {
+    //     //playerIndexが1なら左,それ以外なら右
+    //     bool isBring = (playerIndex == 1) ? playerCnt.isPlayer1BringObj : playerCnt.isPlayer2BringObj;
+    //     //// プレイヤーの前方＋ちょい上
+    //     //Vector3 center = transform.position + transform.forward * 1.5f + Vector3.up * 1f;
+    //     // プレイヤーの前方＋ちょい上
+    //     center = transform.position + transform.forward * 1.5f + Vector3.up * 1f;
+
+    //     // 物体を検索
+    //     Collider[] hits = Physics.OverlapBox(center, boxSize / 2, Quaternion.identity, objLayer);
+
+    //     BringObj bringObj = FindObjectOfType<BringObj>();
+
+    //     //オブジェクトが範囲内かつ、持つボタンを押したら
+    //     if (hits.Length > 0 && isBring)
+    //     {
+    //         //宝箱を運んでいる時は運搬中フラグを立てる
+    //         if (playerIndex == 1)
+    //         {
+    //             bringObj.player1_isBringing = true;
+    //         }
+    //         else
+    //         {
+    //             bringObj.player2_isBringing = true;
+    //         }
+
+    //         heldObject = hits[0].attachedRigidbody;
+    //         if (heldObject != null)
+    //         {
+    //             Collider obj_Col = hits[0];
+    //             obj_Col.isTrigger = true;
+
+    //             heldObject.useGravity = false;
+    //             heldObject.velocity = Vector3.zero; // 落ちてる途中なら停止
+    //         }
+
+    //         // 既に持っている場合は、位置を前方に維持
+    //         if (heldObject != null && isBring)
+    //         {
+    //             //通常時
+    //             if (!playerCnt.OnUnder_OverGimic)
+    //             {
+    //                 Vector3 targetPos = transform.position + transform.forward * 1.5f + Vector3.up * 1f;
+    //                 heldObject.MovePosition(targetPos);
+    //             }
+    //             //上下ギミック時
+    //             else if (playerCnt.OnUnder_OverGimic)
+    //             {
+    //                 //天井の場合,少し下で運ぶ
+    //                 if (bringObj.top)
+    //                 {
+    //                     Vector3 targetPos = transform.position + transform.forward * 1.5f + Vector3.down * 1f;
+    //                     heldObject.MovePosition(targetPos);
+    //                 }
+    //                 //地面の場合,少し上で運ぶ
+    //                 else if (bringObj.bottom)
+    //                 {
+    //                     Vector3 targetPos = transform.position + transform.forward * 1.5f + Vector3.up * 1f;
+    //                     heldObject.MovePosition(targetPos);
+    //                 }
+
+    //             }
+    //         }
+    //     }
+    //     else if (!isBring)
+    //     {
+    //         if (heldObject != null)
+    //         {
+    //             //宝箱を運んでいない時は運搬中フラグをオフ
+    //             if (bringObj != null)
+    //             {
+    //                 if (playerIndex == 1)
+    //                 {
+    //                     bringObj.player1_isBringing = false;
+    //                 }
+    //                 else
+    //                 {
+    //                     bringObj.player2_isBringing = false;
+    //                 }
+    //             }
+
+    //             //通常時
+    //             if (!playerCnt.OnUnder_OverGimic)
+    //             {
+    //                 Collider obj_Col = heldObject.GetComponent<Collider>();
+    //                 if (obj_Col != null) obj_Col.isTrigger = false;
+    //                 heldObject.useGravity = true;
+    //                 heldObject = null;
+    //             }
+    //             //上下ギミック時
+    //             else if (playerCnt.OnUnder_OverGimic)
+    //             {
+    //                 //天井の場合,少し下でおろす
+    //                 if (bringObj.top)
+    //                 {
+    //                     Collider obj_Col = heldObject.GetComponent<Collider>();
+    //                     Vector3 targetPos = transform.position + transform.forward * 1.5f + Vector3.down * 1f;
+    //                     heldObject.MovePosition(targetPos);
+    //                     if (obj_Col != null) obj_Col.isTrigger = false;
+    //                     heldObject.useGravity = true;
+    //                     heldObject = null;
+    //                 }
+    //                 //地面の場合,少し上でおろす
+    //                 else if (bringObj.bottom)
+    //                 {
+    //                     Collider obj_Col = heldObject.GetComponent<Collider>();
+    //                     if (obj_Col != null) obj_Col.isTrigger = false;
+    //                     heldObject.useGravity = true;
+    //                     heldObject = null;
+    //                 }
+
+    //             }
+    //         }
+    //     }
+    // }
 
     //物体を持てる範囲
     void BringArea()
     {
         //playerIndexが1なら左,それ以外なら右
         bool isBring = (playerIndex == 1) ? playerCnt.isPlayer1BringObj : playerCnt.isPlayer2BringObj;
+
         // プレイヤーの前方＋ちょい上
-        Vector3 center = transform.position + transform.forward * 1.5f + Vector3.up * 1f;
+        center = transform.position + transform.forward * 1.5f + Vector3.up * 1f;
 
         // 物体を検索
         Collider[] hits = Physics.OverlapBox(center, boxSize / 2, Quaternion.identity, objLayer);
 
         BringObj bringObj = FindObjectOfType<BringObj>();
 
-        //オブジェクトが範囲内かつ、持つボタンを押したら
+        //--------------------------
+        // 物体を持つ処理
+        //--------------------------
         if (hits.Length > 0 && isBring)
         {
-            //宝箱を運んでいる時は運搬中フラグを立てる
+            // 宝箱の運搬状態フラグ
             if (playerIndex == 1)
-            {
                 bringObj.player1_isBringing = true;
-            }
             else
-            {
                 bringObj.player2_isBringing = true;
-            }
 
             heldObject = hits[0].attachedRigidbody;
+
             if (heldObject != null)
             {
                 Collider obj_Col = hits[0];
                 obj_Col.isTrigger = true;
 
                 heldObject.useGravity = false;
-                heldObject.velocity = Vector3.zero; // 落ちてる途中なら停止
+                heldObject.velocity = Vector3.zero;
             }
 
-            // 既に持っている場合は、位置を前方に維持
+            // ★ 二人で運んでいるときはプレイヤー側で位置更新しない（最重要）
+            if (playerCnt.isDualCarrying)
+                return;
+
+            //--------------------------
+            // 単独運搬時の宝箱位置更新（今まで通り）
+            //--------------------------
             if (heldObject != null && isBring)
             {
+                Vector3 targetPos;
+
                 //通常時
                 if (!playerCnt.OnUnder_OverGimic)
                 {
-                    Vector3 targetPos = transform.position + transform.forward * 1.5f + Vector3.up * 1f;
-                    heldObject.MovePosition(targetPos);
+                    targetPos = transform.position + transform.forward * 1.5f + Vector3.up * 1f;
                 }
                 //上下ギミック時
-                else if (playerCnt.OnUnder_OverGimic)
+                else
                 {
-                    //天井の場合,少し下で運ぶ
-                    if (bringObj.top)
+                    if (bringObj.top) // 天井
                     {
-                        Vector3 targetPos = transform.position + transform.forward * 1.5f + Vector3.down * 1f;
-                        heldObject.MovePosition(targetPos);
+                        targetPos = transform.position + transform.forward * 1.5f + Vector3.down * 1f;
                     }
-                    //地面の場合,少し上で運ぶ
-                    else if (bringObj.bottom)
+                    else // 地面
                     {
-                        Vector3 targetPos = transform.position + transform.forward * 1.5f + Vector3.up * 1f;
-                        heldObject.MovePosition(targetPos);
+                        targetPos = transform.position + transform.forward * 1.5f + Vector3.up * 1f;
                     }
-
                 }
+
+                heldObject.MovePosition(targetPos);
             }
         }
+        //--------------------------
+        // 物体を離す処理
+        //--------------------------
         else if (!isBring)
         {
             if (heldObject != null)
             {
-                //宝箱を運んでいない時は運搬中フラグをオフ
+                //フラグ解除
                 if (bringObj != null)
                 {
                     if (playerIndex == 1)
-                    {
                         bringObj.player1_isBringing = false;
-                    }
                     else
-                    {
                         bringObj.player2_isBringing = false;
-                    }
                 }
 
                 //通常時
@@ -211,35 +405,35 @@ public class PlayerMover : MonoBehaviour
                 {
                     Collider obj_Col = heldObject.GetComponent<Collider>();
                     if (obj_Col != null) obj_Col.isTrigger = false;
+
                     heldObject.useGravity = true;
                     heldObject = null;
                 }
                 //上下ギミック時
-                else if (playerCnt.OnUnder_OverGimic)
+                else
                 {
-                    //天井の場合,少し下でおろす
-                    if (bringObj.top)
+                    Collider obj_Col = heldObject.GetComponent<Collider>();
+
+                    if (bringObj.top) //天井から降ろす
                     {
-                        Collider obj_Col = heldObject.GetComponent<Collider>();
                         Vector3 targetPos = transform.position + transform.forward * 1.5f + Vector3.down * 1f;
                         heldObject.MovePosition(targetPos);
-                        if (obj_Col != null) obj_Col.isTrigger = false;
-                        heldObject.useGravity = true;
-                        heldObject = null;
                     }
-                    //地面の場合,少し上でおろす
-                    else if (bringObj.bottom)
+                    //地面
+                    else
                     {
-                        Collider obj_Col = heldObject.GetComponent<Collider>();
-                        if (obj_Col != null) obj_Col.isTrigger = false;
-                        heldObject.useGravity = true;
-                        heldObject = null;
+                        //特に位置補正は不要
                     }
 
+                    if (obj_Col != null) obj_Col.isTrigger = false;
+
+                    heldObject.useGravity = true;
+                    heldObject = null;
                 }
             }
         }
     }
+
 
     //移動処理
     void Move()
@@ -440,6 +634,16 @@ public class PlayerMover : MonoBehaviour
             touchDeathArea = false;
             Instantiate(jumpEffect, transform.position, Quaternion.identity);
         }
+        //宝箱に触れたら
+        if(other.gameObject.name == "TreasureGroup")
+        {
+            if (playerCnt.isDualCarrying) return; //同時運搬中ならスキップ
+            
+            canJump = true;
+            touchDeathArea = false;
+            Instantiate(jumpEffect, transform.position, Quaternion.identity);
+        }
+
         //トランポリン使用後に地面に触れたら
         if (other.gameObject.CompareTag("Floor") && useTrampoline) useTrampoline = false; //トランポリン使用中フラグをオフ
         //トランポリンに触れたら
@@ -718,23 +922,30 @@ public class PlayerMover : MonoBehaviour
     //OnTriggerStay
     void OnTriggerStay(Collider other)
     {
-        //氷に触れている場合
-        if (other.CompareTag("FrozenArea"))
+        ////氷に触れている場合
+        //if (other.CompareTag("FrozenArea"))
+        //{
+        //    onIce = true;
+        //    //エフェクト
+        //    frozenEffectTime += Time.deltaTime;
+        //    if (frozenEffectTime > 0.01f)
+        //    {
+        //        GameObject effect = Instantiate(frozenEffect, transform.position, Quaternion.identity);
+        //        effectPool.Enqueue(effect); //キューに入れる
+        //        if (effectPool.Count > 30)
+        //        {
+        //            GameObject old = effectPool.Dequeue(); //古いものを取り出す
+        //            Destroy(old);
+        //        }
+        //        frozenEffectTime = 0f;
+        //    }
+        //}
+
+        //トップカメラに切り替え
+        if (other.gameObject.CompareTag("TopCameraPos"))
         {
-            onIce = true;
-            //エフェクト
-            frozenEffectTime += Time.deltaTime;
-            if (frozenEffectTime > 0.01f)
-            {
-                GameObject effect = Instantiate(frozenEffect, transform.position, Quaternion.identity);
-                effectPool.Enqueue(effect); //キューに入れる
-                if (effectPool.Count > 30)
-                {
-                    GameObject old = effectPool.Dequeue(); //古いものを取り出す
-                    Destroy(old);
-                }
-                frozenEffectTime = 0f;
-            }
+            Debug.Log("トップカメラ");
+            cameraCnt.isTopCamera = true;
         }
     }
 
@@ -748,7 +959,7 @@ public class PlayerMover : MonoBehaviour
             slideVelocity = Vector3.zero; //滑りをリセット
         }
         //カメラのズームアウトエリアから出たら
-        if(other.CompareTag("ZoomOutPos"))
+        if (other.CompareTag("ZoomOutPos"))
         {
             isZoomOutPos = false;
         }
@@ -768,6 +979,12 @@ public class PlayerMover : MonoBehaviour
                 }
                 isZoomOutPos = false;
             }
+        }
+        //トップカメラから出たら
+        if (other.gameObject.CompareTag("TopCameraPos"))
+        {
+            Debug.Log("トップカメラ");
+            cameraCnt.isTopCamera = false;
         }
     }
 

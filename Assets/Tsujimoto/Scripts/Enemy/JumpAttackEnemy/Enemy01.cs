@@ -8,6 +8,8 @@ public class Enemy01 : MonoBehaviour
 {
     [HideInInspector] public EnemyState enemyState; //敵の状態を管理する変数
     [HideInInspector] public GameObject player; //どのプレイヤーが範囲内に入ったか
+    public int jumppower = 30; //踏まれた時にノックバックする値
+    bool isGround = false; //地面にいるかどうか
 
     //踏みつけ判定
     [Header("踏みつけ判定")][SerializeField] Vector3 boxSize = new Vector3(1f, 0.2f, 1f);
@@ -125,7 +127,8 @@ public class Enemy01 : MonoBehaviour
                 JumpAttack();
                 break;
             case EnemyState.pushAttack:
-                PushAttack();
+                if(isGround)
+                    PushAttack();
                 break;
         }
     }
@@ -181,6 +184,7 @@ public class Enemy01 : MonoBehaviour
             {
                 rb.AddForce(Vector3.down * 7f, ForceMode.Acceleration);
             }
+            isGround = false;
             //クールタイム処理
             StartCoroutine(EndJumpAttack());
         }
@@ -208,14 +212,46 @@ public class Enemy01 : MonoBehaviour
             PlayerMover pm = FindObjectOfType<PlayerMover>();
             pm.OnStepEnemy(); //音をプレイヤー側で鳴らす
             soundManager.OnPlaySE(soundsList.stepOnPlayer);
-            Instantiate(step, transform.position, step.transform.rotation); //エフェクト再生
-            //キルエフェクト再生
-            Instantiate(killed, transform.position, killed.transform.rotation);
-            hits[0].gameObject.GetComponent<Rigidbody>().velocity = Vector3.zero;
-            hits[0].gameObject.GetComponent<Rigidbody>().AddForce(0f, 50f, 0f, ForceMode.Impulse); //プレイヤーを跳ねさせる
-            Destroy(gameObject);
+            //Instantiate(step, transform.position, step.transform.rotation); //エフェクト再生
+
+            //==同時踏み専用の敵処理==
+            //同時に踏まれているか確認
+            var judge = GetComponent<SameTimeEnemyJudge>();
+            if (judge != null)
+            {
+                judge.OnStepped(hits[0].gameObject);
+                return; // 同時踏み専用の敵は通常の Kill 処理をしない
+            }
+            //普通の敵なら
+            else if (judge == null)
+            {
+                //キルエフェクト再生
+                Instantiate(step, transform.position, step.transform.rotation); //踏み付けエフェクト再生
+                Instantiate(killed, transform.position, killed.transform.rotation);
+                hits[0].gameObject.GetComponent<Rigidbody>().velocity = Vector3.zero;
+                hits[0].gameObject.GetComponent<Rigidbody>().AddForce(0f, jumppower, 0f, ForceMode.Impulse); //プレイヤーを跳ねさせる
+                Destroy(gameObject);
+            }
+
         }
-        
+        //同時踏み付け処理のリセット
+        else
+        {
+            var judge = GetComponent<SameTimeEnemyJudge>();
+            if (judge != null)
+            {
+                // hits は 0 なので、前回踏んだプレイヤーを使う
+                if (judge.playerObj.Count > 0)
+                {
+                    judge.OnReleased(judge.playerObj[0]);
+                }
+                else
+                {
+                    // 踏んでいたプレイヤーが不明な場合は player なしでリリース
+                    judge.OnReleased(null);
+                }
+            }
+        }
     }
     void OnDrawGizmosSelected()
     {
@@ -253,6 +289,8 @@ public class Enemy01 : MonoBehaviour
             Instantiate(smork, transform.position, Quaternion.identity);
 
             jumpAttackToFloor = false;
+
+            isGround = true;
         }
     }
 
@@ -331,5 +369,24 @@ public class Enemy01 : MonoBehaviour
     {
         yield return new WaitForSeconds(time);
         ToEnemyMove();
+    }
+
+    //同時踏み付けのエフェクト処理
+    public void SameTimeKillEffect(GameObject player, bool killByPlayer)
+    {
+        if (killByPlayer)
+        {
+            //キルエフェクト再生
+            Instantiate(step, transform.position, step.transform.rotation); //踏み付けエフェクト再生
+            Instantiate(killed, transform.position, killed.transform.rotation);
+            player.gameObject.GetComponent<Rigidbody>().velocity = Vector3.zero;
+            player.gameObject.GetComponent<Rigidbody>().AddForce(0f, 50f, 0f, ForceMode.Impulse); //プレイヤーを跳ねさせる
+        }
+        else
+        {
+            //キルエフェクト再生
+            Instantiate(killed, transform.position, killed.transform.rotation);
+        }
+
     }
 }

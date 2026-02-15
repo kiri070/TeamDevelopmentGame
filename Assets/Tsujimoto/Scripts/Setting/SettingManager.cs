@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
 using DG.Tweening;
+using UnityEngine.EventSystems;
 
 public class SettingManager : MonoBehaviour
 {
@@ -23,6 +24,7 @@ public class SettingManager : MonoBehaviour
     InputCnt inputCnt; //アクションマップ
     public bool isInputPad = false; //コントローラーを使っているかどうか
     bool isInputMouse = false; //マウスを使っているかどうか
+    public bool isTutorial = false; //チュートリアル中かどうか
 
     void Start()
     {
@@ -106,6 +108,8 @@ public class SettingManager : MonoBehaviour
         }
         //カウントダウン中は設定画面を開かない
         if (countDownUI != null && countDownUI.activeSelf) return;
+
+        if (isTutorial) return;
         
         
         //設定画面を表示
@@ -146,6 +150,11 @@ public class SettingManager : MonoBehaviour
     //設定画面を表示,非表示管理する関数(コントローラー)
     public void Pad_OnOffSettingUI()
     {
+        //チュートリアル中なら
+        if (isTutorial)
+        {
+            return;
+        }
         //ステージを選択中ならバグ回避のため、設定画面を開かない
         if (stageSelectManager != null)
         {
@@ -175,7 +184,24 @@ public class SettingManager : MonoBehaviour
             {
                 settingUI.SetActive(false); //設定画面を非表示
                 padUICnt.CloseSetting();    //他のUIの操作を可能に
-                                            //ゲームシーン以外なら
+
+
+                //ステージセレクトでゲームモードUIが開いていたら
+                CircleArranger ca = FindObjectOfType<CircleArranger>();
+                if (ca != null && SceneManager.GetActiveScene().name == "StageSelect" && ca.gameModeButton.activeSelf)
+                {
+                    // ステージ選択へフォーカス復帰
+                    if (ca.singlePlayButton.gameObject.activeSelf) //シングルプレイボタンがオンなら
+                    {
+                        EventSystem.current.SetSelectedGameObject(ca.singlePlayObj);
+                    }
+                    else
+                    {
+                        EventSystem.current.SetSelectedGameObject(ca.multiPlayObj);
+                    }
+                }
+
+                //ゲームシーン以外なら
                 if (SceneManager.GetActiveScene().name != "Title" && SceneManager.GetActiveScene().name != "StageSelect"
                     && SceneManager.GetActiveScene().name != "ClearScene" && SceneManager.GetActiveScene().name != "GameOverScene")
                 {
