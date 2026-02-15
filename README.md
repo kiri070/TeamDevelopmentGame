@@ -45,7 +45,7 @@ __以下のイベント等に展示しました__
 
 - 実行ファイルの場合 
 1. GoogleDriveからzipファイルをダウンロード  
-2. 解凍してteam.exeを実行  
+2. 解凍して実行  
 [ダウンロードリンク](https://drive.google.com/drive/folders/12XaKCSKDNb2GIsp058l24EpPYubcnIKq?usp=sharing)
 
 
@@ -62,7 +62,7 @@ __キーボードの場合__
 - 辻本 伊吹(メインプログラム)
   
  __その他のメンバー__
-- プログラマー 1人
+- プログラマー 2人
 - デザイナー 2人
 - プランナー 2人
 
